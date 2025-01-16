@@ -255,10 +255,7 @@ const getImageExtension = (mimetype: string): string => {
 };
 
 export async function imageNoop(req: Request, res: Response) {
-  console.log('image noop');
   const propertyId = req.params.id;
-  console.log('id: ', propertyId);
-  console.log(req.headers);
   const bb = busboy({ headers: req.headers });
 
   let isDone = false;
