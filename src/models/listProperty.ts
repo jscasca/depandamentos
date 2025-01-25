@@ -25,7 +25,8 @@ const listPropertySchema = new Schema({
   bathrooms: { type: Number },
   parking: { type: Number },
   parktype: { type: String },
-  furnished: { type: String },
+  furnished: { type: String }, // igual y se quita?
+  features: [], // cualrquier otra caracterisstica en tag
   // images
   coverimage: { type: String },
   pictures: [],

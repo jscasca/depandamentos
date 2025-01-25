@@ -28,15 +28,29 @@ export const ParseProjection = (userProjection: any) => {
 };
 
 type UserUpdates = {
-  fields?: {},
-  clear?: {},
-  add?: {},
-  remove?: {}
+  update?: [],
+  delete?: [],
+  add?: [],
+  remove?: []
 };
+
+const parseUpdate = (values: Record<string, any>[], vFn = (v: any) => v) => {
+  const obj: Record<string, any> = {};
+  values.forEach(({field, value}) => {
+    obj[field] = value;
+  });
+  return obj;
+};
+
 export const ParseUpdate = (userUpdates: UserUpdates) => {
+  const toSet = userUpdates.update ? { $set: parseUpdate(userUpdates.update)} : {};
+  const toUnset = userUpdates.delete ? { $unset: parseUpdate(userUpdates.delete)} : {};
+  const toPush = userUpdates.add ? { $push: parseUpdate(userUpdates.add)} : {};
+  const toPull = userUpdates.remove ? { $pull: parseUpdate(userUpdates.remove)} : {};
   return {
-    $set: {},
-    $push: {},
-    $pull: {}
+    ...toSet,
+    ...toUnset,
+    ...toPush,
+    ...toPull
   }
 }

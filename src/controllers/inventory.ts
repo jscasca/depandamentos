@@ -1,6 +1,6 @@
 import { Request, Response} from "express";
 import { IListDevelopment, ListDevelopment } from "../models/listDevelopment";
-import { getShortId, ParseFilters, ParseProjection, ParseSorting } from "./util";
+import { getShortId, ParseFilters, ParseProjection, ParseSorting, ParseUpdate } from "./util";
 import { IListProperty, ListProperty } from "../models/listProperty";
 import busboy from 'busboy';
 import B2 from 'backblaze-b2';
@@ -143,7 +143,7 @@ const getUnitName = (address: Address) => {
   }
 };
 
-async function updateDevelopment(property: HydratedDocument<IListProperty>) {
+async function updateDevelopmentWithProperty(property: HydratedDocument<IListProperty>) {
   console.log('updating development for: ', property);
   const existingDevelopment = await ListDevelopment.findOne({ address: property.address });
   console.log('existing: ', existingDevelopment);
@@ -195,7 +195,7 @@ async function addNewProperty(address: Address) {
   };
   try {
     const property = await ListProperty.create(newProperty);
-    updateDevelopment(property);
+    updateDevelopmentWithProperty(property);
     return { data: property };
   } catch (e) {
     if ((e as any).code === 11000) {
@@ -229,10 +229,15 @@ export async function putProperty(req: Request, res: Response) {
 };
 
 export async function updateProperty(req: Request, res: Response) {
-  const { id, update } = req.body;
+  const propertyId = req.params.id;
+  const { data } = req.body;
   // validate body?
+  const updates = ParseUpdate(data);
+  console.log(updates);
   try {
-    const updated = await ListProperty.findByIdAndUpdate(id, {});
+    const updated = await ListProperty.findByIdAndUpdate(propertyId, updates, { new: true });
+    console.log(updated);
+    res.send(updated);
   } catch (e) {
     res.status(500).send('Failed to update property')
   }
