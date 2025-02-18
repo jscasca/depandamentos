@@ -36,17 +36,19 @@ type UserUpdates = {
 
 const parseUpdate = (values: Record<string, any>[], vFn = (v: any) => v) => {
   const obj: Record<string, any> = {};
-  values.forEach(({field, value}) => {
-    obj[field] = value;
-  });
+  // values.forEach(({field, value}) => {
+  for (const [key, value] of Object.entries(values)) {
+    obj[key] = value;
+  };
   return obj;
 };
 
 export const ParseUpdate = (userUpdates: UserUpdates) => {
-  const toSet = userUpdates.update ? { $set: parseUpdate(userUpdates.update)} : {};
-  const toUnset = userUpdates.delete ? { $unset: parseUpdate(userUpdates.delete)} : {};
-  const toPush = userUpdates.add ? { $push: parseUpdate(userUpdates.add)} : {};
-  const toPull = userUpdates.remove ? { $pull: parseUpdate(userUpdates.remove)} : {};
+  if (!userUpdates) return {};
+  const toSet = userUpdates?.update ? { $set: parseUpdate(userUpdates.update)} : {};
+  const toUnset = userUpdates?.delete ? { $unset: parseUpdate(userUpdates.delete)} : {};
+  const toPush = userUpdates?.add ? { $push: parseUpdate(userUpdates.add)} : {};
+  const toPull = userUpdates?.remove ? { $pull: parseUpdate(userUpdates.remove)} : {};
   return {
     ...toSet,
     ...toUnset,

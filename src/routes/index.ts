@@ -1,7 +1,7 @@
 import express, { Express, Request, Response} from "express";
 import { router as StatusRouter } from './status';
 import { router as AuthRouter } from './auth';
-import { router as ListingRouter } from './listings';
+// import { router as ListingRouter } from './listings';
 import { router as InventoryRouter } from './inventory';
 
 const setRoutes = (app: Express) => {
@@ -16,7 +16,7 @@ const setRoutes = (app: Express) => {
     // Status
     app.use('/status', StatusRouter);
     app.use('/auth', AuthRouter);
-    app.use('/listings', ListingRouter);
+    // app.use('/listings', ListingRouter);
     app.use('/inventory', InventoryRouter);
 };
 

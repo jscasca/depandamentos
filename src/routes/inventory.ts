@@ -8,7 +8,8 @@ import {
     getProperty,
     putProperty,
     imageUpload,
-    imageNoop
+    imageNoop,
+    updateProperty
 } from "../controllers/inventory";
 
 const router = Router();
@@ -26,6 +27,8 @@ router.get('/properties', verifyToken, getProperties);
 router.get('/properties/:id', verifyToken, getProperty);
 
 router.put('/properties', verifyToken, putProperty);
+
+router.put('/properties/:id', verifyToken, updateProperty);
 
 router.get('/developments', verifyToken, getDevelopments);
 
