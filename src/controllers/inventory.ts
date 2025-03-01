@@ -230,14 +230,18 @@ export async function putProperty(req: Request, res: Response) {
 
 export async function updateProperty(req: Request, res: Response) {
   const propertyId = req.params.id;
-  const { data } = req.body;
+  const data = req.body;
   // validate body?
+  console.log(data);
   const updates = ParseUpdate(data);
   console.log(updates);
+  if (Object.keys(updates).length === 0) {
+    return res.status(400).send('Missing parameters');
+  }
   try {
     const updated = await ListProperty.findByIdAndUpdate(propertyId, updates, { new: true });
     console.log(updated);
-    res.send(updated);
+    res.send({ data: updated });
   } catch (e) {
     res.status(500).send('Failed to update property')
   }
@@ -277,9 +281,12 @@ export async function imageNoop(req: Request, res: Response) {
     } else {
       b2Upload(finishedFile).then((b2result) => {
         console.log('b2 uploaded: ', b2result);
+        // save image into propertyId
         if (b2result.error) {
           res.send(500).send({ error: b2result.error });
         } else {
+          // const picUrl = '';
+          // ListProperty.findByIdAndUpdate(propertyId, { $push: { 'pictures': picUrl}});
           res.send(b2result);
         }
       }).catch((err) => {
