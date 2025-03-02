@@ -8,17 +8,12 @@ import {
     getProperty,
     putProperty,
     imageUpload,
-    imageNoop,
     updateProperty
 } from "../controllers/inventory";
 
 const router = Router();
 
 router.post('/properties/:id/images', verifyToken, imageUpload);
-
-router.post('/properties/:id/fakeimages', verifyToken, imageNoop);
-
-router.post('/properties/:id/fakeimages2', imageNoop);
 
 router.get('/clean', verifyToken, cleanInventory);
 

@@ -1,4 +1,8 @@
 import * as dotenv from "dotenv";
+
+// Make sure env variables are loaded before importing anything that uses them
+dotenv.config();
+
 import cors from "cors";
 import helmet from "helmet";
 import mongoose from "mongoose";
@@ -7,8 +11,6 @@ import bodyParser, { BodyParser } from "body-parser";
 // import * as fileUpload from 'express-fileupload';
 import setRoutes from "./routes";
 import multer from "multer";
-
-dotenv.config();
 
 const mongoURI = process.env.NODE_ENV === 'dev' ?
   (process.env.MONGO_TEST || 'mongodb://localhost:27017/test') :
@@ -34,7 +36,7 @@ app.use(urlencodedParser);
 // };
 
 const corsDefault = {
-  origin: ['http://localhost:3000']
+  origin: ['http://localhost:3000', 'https://encasaportal.goosemate.com']
 };
 app.use(cors(corsDefault));
 

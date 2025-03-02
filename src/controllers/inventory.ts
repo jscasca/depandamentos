@@ -11,8 +11,8 @@ import { HydratedDocument } from "mongoose";
 const ajv = new Ajv({removeAdditional: true});
 
 const b2 = new B2({
-  applicationKeyId: process.env.STORAGE_ID || '',
-  applicationKey: process.env.STORAGE || '',
+  applicationKeyId: process.env.STORAGE_KEYID || '',
+  applicationKey: process.env.STORAGE_KEY || '',
 });
 
 const getSizeNum = (n: any, fallback = 10) => {
@@ -243,7 +243,7 @@ export async function updateProperty(req: Request, res: Response) {
     console.log(updated);
     res.send({ data: updated });
   } catch (e) {
-    res.status(500).send('Failed to update property')
+    res.status(500).send('Failed to update property');
   }
 };
 
@@ -263,7 +263,19 @@ const getImageExtension = (mimetype: string): string => {
   }[mimetype] || '';
 };
 
-export async function imageNoop(req: Request, res: Response) {
+const addPropertyImage = async (propertyId: string, imageUrl: string, res: Response) => {
+  const updates = {$push: { pictures: imageUrl}};
+  const opts = { new: true };
+  try {
+    const updated = await ListProperty.findByIdAndUpdate(propertyId, updates, opts);
+    res.send({data: updated});
+  } catch (e) {
+    res.status(500).send('Failed to update property')
+  };
+};
+
+// TODO: Update this fn
+export async function imageUpload(req: Request, res: Response) {
   const propertyId = req.params.id;
   const bb = busboy({ headers: req.headers });
 
@@ -277,20 +289,25 @@ export async function imageNoop(req: Request, res: Response) {
     if (isDone) return;
     isDone = true;
     if (output.error) {
-      res.status(output.status || 500).send(output.error);
+      console.log('Upload encountered error');
+      return res.status(output.status || 500).send(output.error);
     } else {
       b2Upload(finishedFile).then((b2result) => {
         console.log('b2 uploaded: ', b2result);
         // save image into propertyId
         if (b2result.error) {
-          res.send(500).send({ error: b2result.error });
+          console.log('error from b2 fn');
+          res.status(500).send({ error: b2result.error });
         } else {
           // const picUrl = '';
           // ListProperty.findByIdAndUpdate(propertyId, { $push: { 'pictures': picUrl}});
-          res.send(b2result);
+          console.log('uploaded!!! ', b2result);
+          const imageUrl = "https://images.goosemate.com/" + b2result.data;
+          addPropertyImage(propertyId, imageUrl as string, res);
         }
       }).catch((err) => {
-        res.status(500).json({ error: err });
+        console.log('Failed to b2upload: ', err);
+        return res.status(500).json({ error: err });
       });
     }
   };
@@ -347,8 +364,8 @@ export async function imageNoop(req: Request, res: Response) {
     finishOut();
   });
   bb.on('error', (err) => {
-    console.error(err);
-    res.status(500).json({ error: 'Failed to upload form'});
+    console.error('Encoutenred error on bb: ', err);
+    return res.status(500).json({ error: 'Failed to upload form'});
   });
   console.log('Pipe busboy....');
   req.pipe(bb);
@@ -365,18 +382,19 @@ async function b2Upload(file: uploadFile) {
   console.log('Uploading to b2: ', file);
   try {
     await b2.authorize();
+    console.log('b2 authorized');
     const bucketId = process.env.STORAGE_BUCKET || '4c9ddc182b16286e9107011a';
     const uploadUrl = await b2.getUploadUrl({ bucketId });
-    console.log('upload url: ', uploadUrl);
+    console.log('upload url: ', uploadUrl.data);
     const upload = await b2.uploadFile({
       uploadUrl: uploadUrl.data.uploadUrl,
       uploadAuthToken: uploadUrl.data.authorizationToken,
-      fileName: file.fileName,
+      fileName: "images/" + file.fileName,
       contentLength: file.contentLength,
       mime: file.mimeType,
       data: file.data
     });
-    console.log('uploaded: ', upload);
+    console.log('uploaded: ', upload.data);
     return { data: file.fileName };
   } catch (e) {
     console.error(e);
@@ -385,45 +403,6 @@ async function b2Upload(file: uploadFile) {
 }
 
 // TODO: explore sharp() for image editing https://github.com/lovell/sharp
-export async function imageUpload(req: Request, res: Response) {
-  const propertyId = req.params.id;
-  // upload image, return address?
-  // req.file is 'image' file
-  // req.body will hold text fields, if any
-  console.log(req.file, req.body);
-  /* file contains ->
-    fieldname: filed name in the form
-    originalname: file name
-    encoding: encoding type of file
-    mimetype: mime type of the file
-    size: file size in bytes
-
-  */
-  if (req.file && req.file.buffer !== undefined) {
-    await b2.authorize();
-    const uploadUrl = await b2.getUploadUrl({ bucketId: process.env.STORAGE_BUCKET || '4c9ddc182b16286e9107011a'});
-    console.log('UploadUrl: ', uploadUrl);
-    const upload = await b2.uploadFile({
-      uploadUrl: uploadUrl.data.uploadUrl,
-      uploadAuthToken: uploadUrl.data.authorizationToken,
-      fileName: 'Test',
-      contentLength: 0,
-      mime: '',
-      data: req.file?.buffer,
-      hash: 'sha1-hash',
-      onUploadProgress: null
-    });
-    console.log('Upload: ', upload);
-    res.send({ data: { name: req.file.originalname }});
-  } else {
-    // 
-    console.log('no file/buffer??');
-    res.status(500).send({ error: 'Failed to upload'})
-  }
- 
-
-};
-
 // TODO: make clean utility
 export async function cleanInventory(req: Request, res: Response) {
   // const devs = await ListDevelopment.find({});

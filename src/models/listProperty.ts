@@ -3,6 +3,9 @@ import mongoose, { model, Schema } from "mongoose";
 const listPropertySchema = new Schema({
   name: { type: String },
   sku: { type: String },
+  // indexing by listing
+  forSale: { type: Boolean },
+  forRent: { type: Boolean },
   // location
   address: { type: String },
   postal_address: { type: String, unique: true },
